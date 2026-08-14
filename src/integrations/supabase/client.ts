@@ -30,8 +30,17 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env['VITE_SUPABASE_URL'] || process.env['SUPABASE_URL'];
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] || process.env['SUPABASE_PUBLISHABLE_KEY'];
+  //
+  // ATENÇÃO — tem que ser notação de ponto. A config da Lovable injeta estas
+  // variáveis como `define: { "import.meta.env.VITE_SUPABASE_URL": "..." }`, e
+  // o define do Vite substitui a expressão exata. Com colchetes
+  // (`import.meta.env['VITE_SUPABASE_URL']`) nada casa, o termo vira undefined
+  // e sobra só o process.env — que no navegador é um objeto vazio. Era assim
+  // que estava, e o app quebrava na Vercel com "Missing Supabase environment
+  // variable(s)" antes mesmo de renderizar.
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env['SUPABASE_URL'];
+  const SUPABASE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env['SUPABASE_PUBLISHABLE_KEY'];
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
