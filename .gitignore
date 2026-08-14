@@ -20,6 +20,9 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Vercel
+.vercel
+
 # Variáveis de ambiente (configurar na Vercel, não commitar)
 .env
 .env.*

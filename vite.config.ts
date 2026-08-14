@@ -12,4 +12,7 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  // Alvo de deploy: Vercel. Sem isso o build cai no fallback `cloudflare-module`
+  // da config da Lovable. Gera .vercel/output (Build Output API v3).
+  nitro: { preset: "vercel" },
 });
