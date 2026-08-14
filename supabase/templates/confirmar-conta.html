@@ -1,0 +1,130 @@
+<!--
+  E-mail de confirmação de conta — AVANTE Questionários.
+
+  Mesmas regras do recuperar-senha.html: tabela, CSS inline, sem imagem externa.
+
+  Traz os dois caminhos de propósito. O código ({{ .Token }}) é o que o médico
+  digita na tela do app; o link ({{ .ConfirmationURL }}) fica como alternativa
+  para quem prefere só clicar. Quem tenta digitar um código e não acha onde
+  desiste do cadastro, então o código vem primeiro e em destaque.
+
+  O código tem 8 dígitos (mailer_otp_length no projeto). Se esse número mudar,
+  o texto "8 dígitos" abaixo precisa acompanhar.
+
+  Variáveis do Supabase: {{ .Token }}, {{ .ConfirmationURL }}, {{ .Email }}.
+-->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+  Seu código de confirmação do Avante Questionários. Vale por 1 hora.
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#eef2f6;margin:0;padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <tr>
+    <td align="center">
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+             style="width:100%;max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(11,37,69,0.12);">
+
+        <!-- Cabeçalho -->
+        <tr>
+          <td style="background-color:#0B2545;padding:28px 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:10px;font-size:26px;line-height:26px;color:#1FB8A6;">&#10003;</td>
+                <td>
+                  <div style="color:#ffffff;font-size:17px;font-weight:600;letter-spacing:0.3px;">Avante Questionários</div>
+                  <div style="color:rgba(255,255,255,0.65);font-size:12px;padding-top:2px;">Acesso do médico</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Corpo -->
+        <tr>
+          <td style="padding:36px 32px 8px 32px;">
+            <h1 style="margin:0 0 16px 0;font-size:22px;line-height:1.3;color:#0B2545;font-weight:700;">
+              Confirme sua conta
+            </h1>
+            <p style="margin:0 0 24px 0;font-size:15px;line-height:1.65;color:#3d4f66;">
+              Sua conta <strong style="color:#0B2545;">{{ .Email }}</strong> está quase pronta.
+              Digite o código abaixo na tela de confirmação:
+            </p>
+          </td>
+        </tr>
+
+        <!-- Código -->
+        <tr>
+          <td style="padding:0 32px 24px 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                   style="background-color:#f4f8f9;border:1px solid #cfe6e2;border-radius:10px;">
+              <tr>
+                <td align="center" style="padding:22px 16px;">
+                  <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;color:#7a8899;text-transform:uppercase;padding-bottom:10px;">
+                    Seu código
+                  </div>
+                  <div style="font-family:'SF Mono',Menlo,Consolas,'Courier New',monospace;
+                              font-size:32px;font-weight:700;letter-spacing:7px;color:#0B2545;">
+                    {{ .Token }}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Alternativa: link -->
+        <tr>
+          <td style="padding:0 32px 28px 32px;">
+            <p style="margin:0 0 14px 0;font-size:13px;line-height:1.6;color:#7a8899;">
+              Prefere não digitar? Confirme com um clique:
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" bgcolor="#1FB8A6" style="border-radius:8px;">
+                  <a href="{{ .ConfirmationURL }}"
+                     style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:600;
+                            color:#ffffff;text-decoration:none;border-radius:8px;">
+                    Confirmar minha conta
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Avisos -->
+        <tr>
+          <td style="padding:0 32px 32px 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                   style="background-color:#f4f8f9;border-left:3px solid #1FB8A6;border-radius:6px;">
+              <tr>
+                <td style="padding:14px 16px;">
+                  <p style="margin:0 0 8px 0;font-size:13px;line-height:1.6;color:#3d4f66;">
+                    O código tem 8 dígitos e vale por <strong>1 hora</strong>.
+                  </p>
+                  <p style="margin:0;font-size:13px;line-height:1.6;color:#3d4f66;">
+                    <strong>Não criou esta conta?</strong> Pode ignorar este e-mail — nada será ativado.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Rodapé -->
+        <tr>
+          <td style="background-color:#f7f9fb;padding:20px 32px;border-top:1px solid #e4eaf0;">
+            <p style="margin:0 0 4px 0;font-size:12px;line-height:1.5;color:#7a8899;">
+              Dr. Charles Oliveira &middot; Avante Questionários
+            </p>
+            <p style="margin:0;font-size:11px;line-height:1.5;color:#9aa7b5;">
+              Mensagem automática — não responda a este e-mail.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
