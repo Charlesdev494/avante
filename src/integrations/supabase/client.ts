@@ -27,6 +27,20 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 
+// Endereço e chave pública do projeto Supabase do AVANTE.
+//
+// Ficam no código de propósito. Estes dois valores são públicos por definição:
+// mesmo vindos de variável de ambiente, eles terminam dentro do JavaScript que
+// o navegador baixa — é assim que o Supabase foi desenhado. Quem protege os
+// dados dos pacientes é a RLS do banco, não o segredo destes valores.
+//
+// Servem de rede de segurança: sem eles, qualquer tropeço na injeção das
+// variáveis em tempo de build derruba o app inteiro na primeira tela, com uma
+// mensagem que não diz o que fazer. A variável de ambiente continua tendo
+// prioridade, então dá para apontar para outro projeto sem mexer no código.
+const SUPABASE_URL_PADRAO = 'https://lpszrxuqoxgrtqzpgerz.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY_PADRAO = 'sb_publishable_6K0QYLgMB3K9os4C4CiKnA_Nckxn1kN';
+
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
@@ -38,19 +52,12 @@ function createSupabaseClient() {
   // e sobra só o process.env — que no navegador é um objeto vazio. Era assim
   // que estava, e o app quebrava na Vercel com "Missing Supabase environment
   // variable(s)" antes mesmo de renderizar.
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env['SUPABASE_URL'];
+  const SUPABASE_URL =
+    import.meta.env.VITE_SUPABASE_URL || process.env['SUPABASE_URL'] || SUPABASE_URL_PADRAO;
   const SUPABASE_PUBLISHABLE_KEY =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env['SUPABASE_PUBLISHABLE_KEY'];
-
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
-  }
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    process.env['SUPABASE_PUBLISHABLE_KEY'] ||
+    SUPABASE_PUBLISHABLE_KEY_PADRAO;
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
