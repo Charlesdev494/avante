@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PainMap } from "@/components/pain-map";
+import { painMapHasContent, toSex, type PainMapValue, type Sex } from "@/lib/pain-map-value";
 import { EvaThermometer } from "@/components/eva-thermometer";
 import { QuestionnaireRunner } from "@/components/questionnaire-runner";
 import { getQuestionnaire, interpretEva } from "@/lib/questionnaires";
@@ -27,6 +28,7 @@ interface Assessment {
   answers: any;
   score: any;
   patient_name: string;
+  patient_biological_sex: Sex | null;
 }
 
 function RespondPage() {
@@ -45,7 +47,7 @@ function RespondPage() {
 
   const [eva, setEva] = useState<number>(5);
   const [formAnswers, setFormAnswers] = useState<Record<string, number>>({});
-  const [painMap, setPainMap] = useState<{ front: string; back: string; hands?: string; handsBack?: string; face?: string; faceProfile?: string; faceProfileR?: string; faceBack?: string; footTop?: string; footLateral?: string; footPlantar?: string; footTopL?: string; footLateralL?: string; footPlantarL?: string; pelvis?: string; pelvisGlute?: string } | null>(null);
+  const [painMap, setPainMap] = useState<PainMapValue | null>(null);
 
   const draftKey = `responder-draft:${token}`;
 
@@ -81,6 +83,7 @@ function RespondPage() {
         answers: row.answers,
         score: row.score,
         patient_name: row.patient_name,
+        patient_biological_sex: toSex(row.patient_biological_sex),
       };
       setA(mapped);
 
@@ -94,7 +97,7 @@ function RespondPage() {
           setPainMap(d.painMap ?? null);
           setFormAnswers(d.formAnswers ?? {});
           const hasContent =
-            (d.painMap && Object.values(d.painMap).some((v: any) => typeof v === "string" && v.length > 0)) ||
+            painMapHasContent(d.painMap) ||
             (d.formAnswers && Object.keys(d.formAnswers).length > 0) ||
             (typeof d.eva === "number" && d.eva !== 5);
           if (hasContent) {
@@ -241,7 +244,7 @@ function RespondPage() {
       answers = { value: eva };
       score = { value: eva, interpretation: interpretEva(eva) };
     } else if (a!.questionnaire_type === "pain_map") {
-      if (!painMap || !Object.values(painMap).some((v) => typeof v === "string" && v.length > 0)) {
+      if (!painMapHasContent(painMap)) {
         return toast.error("Marque ao menos uma região no mapa.");
       }
       answers = painMap;
@@ -332,7 +335,11 @@ function RespondPage() {
               <p className="text-sm">
                 Pinte com o dedo as áreas onde sente dor. Use <strong>cores mais escuras para dores mais intensas</strong> e <strong>cores mais claras para dores menos intensas</strong>.
               </p>
-              <PainMap value={painMap} onChange={setPainMap} />
+              <PainMap
+                value={painMap}
+                onChange={setPainMap}
+                sex={a.patient_biological_sex ?? undefined}
+              />
             </div>
           )}
 

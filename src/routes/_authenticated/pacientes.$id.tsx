@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PainMap } from "@/components/pain-map";
+import type { PainMapValue, Sex } from "@/lib/pain-map-value";
 import { getQuestionnaire, interpretEva, QUESTIONNAIRES, type QuestionnaireType } from "@/lib/questionnaires";
 import { ArrowLeft, Copy, Mail, MessageCircle, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -53,6 +54,7 @@ export const Route = createFileRoute("/_authenticated/pacientes/$id")({
 interface Patient {
   id: string;
   name: string;
+  biological_sex: Sex | null;
   birth_date: string | null;
   phone: string | null;
   email: string | null;
@@ -137,7 +139,20 @@ function PatientDetailPage() {
       const pm = byDay.get(d)!.find((x) => x.questionnaire_type === "pain_map" && x.answers);
       return pm ? { day: d, answers: pm.answers, responded: !!pm.responded_at } : null;
     })
-    .filter(Boolean) as { day: number; answers: { front: string; back: string }; responded: boolean }[];
+    .filter(Boolean) as { day: number; answers: PainMapValue; responded: boolean }[];
+
+  async function setBiologicalSex(valor: Sex) {
+    const { error } = await supabase
+      .from("patients")
+      .update({ biological_sex: valor })
+      .eq("id", id);
+    if (error) {
+      console.error(error);
+      return toast.error("Não foi possível salvar o sexo biológico.");
+    }
+    setPatient((p) => (p ? { ...p, biological_sex: valor } : p));
+    toast.success("Sexo biológico registrado.");
+  }
 
   async function deletePatient() {
     if (!confirm("Mover este paciente para a Lixeira? Você poderá restaurá-lo depois.")) return;
@@ -165,7 +180,34 @@ function PatientDetailPage() {
             {patient.birth_date && (
               <> · nasc. {new Date(patient.birth_date).toLocaleDateString("pt-BR")}</>
             )}
+            {patient.biological_sex && (
+              <> · {patient.biological_sex === "female" ? "feminino" : "masculino"}</>
+            )}
           </div>
+          {/* Paciente cadastrado antes do campo existir fica sem sexo, e sem ele o
+              Mapa da Dor não sabe qual anatomia usar. Preenchimento aqui, na ficha. */}
+          {!patient.biological_sex && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2">
+              <span className="text-xs text-amber-900">
+                Sexo biológico não informado — o Mapa da Dor precisa dele para escolher as vistas.
+              </span>
+              {(
+                [
+                  ["female", "Feminino"],
+                  ["male", "Masculino"],
+                ] as const
+              ).map(([valor, rotulo]) => (
+                <Button
+                  key={valor}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setBiologicalSex(valor)}
+                >
+                  {rotulo}
+                </Button>
+              ))}
+            </div>
+          )}
           {patient.notes && (
             <p className="mt-2 max-w-xl text-sm">{patient.notes}</p>
           )}
@@ -257,7 +299,11 @@ function PatientDetailPage() {
             {painMaps.map((pm) => (
               <div key={pm.day} className="space-y-2">
                 <div className="text-xs font-medium text-muted-foreground">D{pm.day}</div>
-                <PainMap value={pm.answers} readOnly />
+                <PainMap
+                  value={pm.answers}
+                  readOnly
+                  sex={patient?.biological_sex ?? undefined}
+                />
               </div>
             ))}
           </div>

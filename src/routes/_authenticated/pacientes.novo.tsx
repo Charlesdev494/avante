@@ -18,6 +18,9 @@ export const Route = createFileRoute("/_authenticated/pacientes/novo")({
 function NewPatientPage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  // Sexo biológico, não gênero: o que define quais vistas anatômicas o Mapa da
+  // Dor mostra (corpo inteiro e posição ginecológica).
+  const [biologicalSex, setBiologicalSex] = useState<"female" | "male" | "">("");
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -35,6 +38,7 @@ function NewPatientPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return toast.error("Informe o nome do paciente.");
+    if (!biologicalSex) return toast.error("Informe o sexo biológico do paciente.");
     if (selected.length === 0) return toast.error("Selecione ao menos um questionário.");
     if (days.length === 0) return toast.error("Selecione ao menos um dia (0, 30 ou 90).");
 
@@ -45,6 +49,7 @@ function NewPatientPage() {
       .from("patients")
       .insert({
         name: name.trim(),
+        biological_sex: biologicalSex,
         birth_date: birthDate || null,
         phone: phone || null,
         email: email.trim() || null,
@@ -92,6 +97,30 @@ function NewPatientPage() {
             <div className="space-y-2">
               <Label htmlFor="name">Nome completo *</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bio-sex">Sexo biológico *</Label>
+              <div className="flex gap-2" id="bio-sex">
+                {(
+                  [
+                    ["female", "Feminino"],
+                    ["male", "Masculino"],
+                  ] as const
+                ).map(([valor, rotulo]) => (
+                  <Button
+                    key={valor}
+                    type="button"
+                    variant={biologicalSex === valor ? "default" : "outline"}
+                    onClick={() => setBiologicalSex(valor)}
+                    className="flex-1"
+                  >
+                    {rotulo}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Define as vistas do Mapa da Dor (corpo e região pélvica).
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="birth">Data de nascimento</Label>

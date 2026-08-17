@@ -66,6 +66,7 @@ export type Database = {
       }
       patients: {
         Row: {
+          biological_sex: string | null
           birth_date: string | null
           created_at: string
           deleted_at: string | null
@@ -79,6 +80,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          biological_sex?: string | null
           birth_date?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -92,6 +94,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          biological_sex?: string | null
           birth_date?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -140,6 +143,7 @@ export type Database = {
           day: number
           id: string
           patient_id: string
+          patient_biological_sex: string
           patient_name: string
           questionnaire_type: string
           responded_at: string
