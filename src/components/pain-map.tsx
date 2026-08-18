@@ -16,6 +16,7 @@ import corpoCostasMascImg from "@/assets/mapa/corpo-costas-m.png";
 import corpoFrenteFemImg from "@/assets/mapa/corpo-frente-f.png";
 import corpoCostasFemImg from "@/assets/mapa/corpo-costas-f.png";
 import gluteaImg from "@/assets/mapa/glutea.png";
+import pelvisFemImg from "@/assets/mapa/pelvis-f.png";
 
 /**
  * Mapa da Dor — paciente pinta áreas doloridas.
@@ -670,8 +671,10 @@ function Panel({
           </div>
         ) : null}
       </div>
-      <div className="mt-2 text-center text-xs font-semibold tracking-widest text-muted-foreground">
-        {label}
+      {/* espaco inquebravel depois do travessao: sem isso ele fica sozinho numa
+          linha quando o painel e estreito (grade de 3 colunas da evolucao) */}
+      <div className="mt-2 text-balance text-center text-[11px] font-semibold leading-tight tracking-wide text-muted-foreground">
+        {label.replace(/ — /g, " — ")}
       </div>
     </div>
   );
@@ -756,10 +759,18 @@ function PairPanel({ src, alt, flipSlot }: { src: string; alt: string; flipSlot:
   return (
     <div className="absolute inset-0 flex items-stretch">
       {(["ESQUERDA", "DIREITA"] as const).map((lado, i) => (
-        <div key={lado} className="relative flex-1 px-2 pb-4">
-          <FigureImage src={src} alt={`${alt} — mão ${lado.toLowerCase()}`} flip={i === flipSlot} />
+        <div key={lado} className="flex flex-1 flex-col px-2">
+          {/* a figura e absoluta dentro deste wrapper; o rotulo fica fora dele,
+              senao a imagem cobre o texto */}
+          <div className="relative flex-1">
+            <FigureImage
+              src={src}
+              alt={`${alt} — mão ${lado.toLowerCase()}`}
+              flip={i === flipSlot}
+            />
+          </div>
           <span
-            className="absolute inset-x-0 bottom-0 text-center text-[10px] tracking-widest"
+            className="pt-1 text-center text-[10px] leading-tight tracking-wide"
             style={{ color: SKIN_STROKE, opacity: 0.7 }}
           >
             MÃO {lado}
@@ -845,7 +856,22 @@ const PELVIS_HALF: Pt[] = [
   [180, 344],
 ];
 
+/**
+ * Render 3D da posição ginecológica, por sexo. Só existe o feminino; o masculino
+ * segue no desenho vetorial abaixo até haver um render equivalente.
+ *
+ * Os rótulos vêm embutidos na imagem (foi assim que o Gemini gerou). Isso
+ * significa que trocar um termo exige gerar a figura de novo — anotado como
+ * limitação conhecida, não como escolha.
+ */
 function PelvisSilhouette({ sex }: { sex: Sex }) {
+  if (sex === "female") {
+    return <FigureImage src={pelvisFemImg} alt="Posição ginecológica, feminino" />;
+  }
+  return <PelvisVetorial sex={sex} />;
+}
+
+function PelvisVetorial({ sex }: { sex: Sex }) {
   const line = SKIN_STROKE;
   const mucosa = "#9a2a3a";
   const skinDeep = "#f0b8b0";
