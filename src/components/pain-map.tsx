@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Eraser, RotateCcw } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Eraser, Maximize2, RotateCcw } from "lucide-react";
 import type { CanvasKey, PainMapValue, Sex } from "@/lib/pain-map-value";
 import maoPalmaImg from "@/assets/mapa/mao-palma.png";
 import maoDorsoImg from "@/assets/mapa/mao-dorso.png";
@@ -42,7 +43,26 @@ interface Props {
   readOnly?: boolean;
   /** Sexo biológico da ficha do paciente; define o padrão das vistas anatômicas. */
   sex?: Sex;
+  /**
+   * Rótulo do mapa (ex.: "D7"), usado só no título da ampliação. Na evolução o
+   * médico vê vários mapas lado a lado; sem isso, aberto em tela cheia, não dá
+   * para saber de qual dia é o desenho.
+   */
+  caption?: string;
 }
+
+/**
+ * Ampliar é recurso de leitura: no modo de resposta o toque no painel pinta, e
+ * abrir um diálogo por cima roubaria o traço do paciente. Só o médico, que vê o
+ * mapa em `readOnly` e em painéis espremidos pela grade da evolução, ganha o
+ * clique para ampliar.
+ *
+ * Vai por contexto em vez de prop porque `Panel` é instanciado 16 vezes; passar
+ * dois valores fixos em todas as chamadas só adicionaria ruído.
+ */
+const PanelZoomContext = createContext<{ enabled: boolean; caption?: string }>({
+  enabled: false,
+});
 
 type View = "body" | "hands" | "face" | "feet" | "pelvis";
 
@@ -71,7 +91,15 @@ const PALETTE: { color: string; label: string }[] = [
   { color: "#000000", label: "Preto — pior dor" },
 ];
 
-export function PainMap({ value, onChange, readOnly, sex: sexFromPatient }: Props) {
+export function PainMap(props: Props) {
+  return (
+    <PanelZoomContext.Provider value={{ enabled: !!props.readOnly, caption: props.caption }}>
+      <PainMapBody {...props} />
+    </PanelZoomContext.Provider>
+  );
+}
+
+function PainMapBody({ value, onChange, readOnly, sex: sexFromPatient }: Props) {
   const frontRef = useRef<HTMLCanvasElement>(null);
   const backRef = useRef<HTMLCanvasElement>(null);
   const handsRef = useRef<HTMLCanvasElement>(null);
@@ -626,6 +654,23 @@ function Panel({
   mirror?: boolean;
   showScrollRail?: boolean;
 }) {
+  const zoom = useContext(PanelZoomContext);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  /**
+   * A pintura vive no canvas, e o mesmo nó não pode aparecer em dois lugares.
+   * Então a ampliação recebe uma cópia em PNG tirada no momento do clique — e
+   * não o `value` gravado, para o que aparece ampliado ser exatamente o que está
+   * na tela.
+   */
+  const [snapshot, setSnapshot] = useState<string | null>(null);
+
+  const openZoom = () => {
+    setSnapshot(canvasRef.current?.toDataURL("image/png") ?? null);
+    setZoomOpen(true);
+  };
+
+  const title = [zoom.caption, label].filter(Boolean).join(" — ");
+
   return (
     <div className="rounded-lg border bg-white p-2">
       <div
@@ -656,6 +701,19 @@ function Panel({
             <div style={{ width: "100%", height: "100%", pointerEvents: "none" }}>{children}</div>
           </div>
           <canvas ref={canvasRef} width={w} height={h} className="absolute inset-0 h-full w-full" />
+          {zoom.enabled && (
+            <button
+              type="button"
+              onClick={openZoom}
+              aria-label={`Ampliar ${title}`}
+              title="Clique para ampliar"
+              className="group absolute inset-0 cursor-zoom-in rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="absolute right-1 top-1 rounded bg-white/85 p-1 text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                <Maximize2 className="h-3.5 w-3.5" />
+              </span>
+            </button>
+          )}
         </div>
         {showScrollRail ? (
           <div
@@ -677,6 +735,41 @@ function Panel({
       <div className="mt-2 text-balance text-center text-[11px] font-semibold leading-tight tracking-wide text-muted-foreground">
         {label.replace(/ — /g, " — ")}
       </div>
+
+      {zoom.enabled && (
+        <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
+          <DialogContent className="w-auto max-w-[96vw] gap-3 p-4 sm:p-5">
+            <DialogTitle className="pr-8 text-sm font-semibold tracking-wide text-secondary">
+              {title}
+            </DialogTitle>
+            {/* Mesma caixa de proporção do painel, esticada até o limite da janela:
+                a largura é a menor entre 88% da largura e o que 74% da altura
+                permite, para a figura nunca estourar a tela nem deformar. */}
+            <div
+              className="relative mx-auto overflow-hidden rounded-md bg-white"
+              style={{
+                aspectRatio: `${w}/${h}`,
+                width: `min(88vw, calc(74vh * ${w} / ${h}))`,
+              }}
+            >
+              <div
+                className="absolute inset-0"
+                style={mirror ? { transform: "scaleX(-1)" } : undefined}
+              >
+                {children}
+              </div>
+              {snapshot && (
+                <img
+                  src={snapshot}
+                  alt={`Marcações de dor — ${label}`}
+                  className="absolute inset-0 h-full w-full select-none"
+                  draggable={false}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

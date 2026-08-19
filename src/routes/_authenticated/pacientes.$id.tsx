@@ -294,7 +294,10 @@ function PatientDetailPage() {
 
       {painMaps.length > 0 && (
         <Card className="mb-6 p-5">
-          <h2 className="mb-3 text-sm font-semibold text-secondary">Mapa da Dor — evolução</h2>
+          <h2 className="text-sm font-semibold text-secondary">Mapa da Dor — evolução</h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Clique em qualquer desenho para ampliar.
+          </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {painMaps.map((pm) => (
               <div key={pm.day} className="space-y-2">
@@ -303,6 +306,7 @@ function PatientDetailPage() {
                   value={pm.answers}
                   readOnly
                   sex={patient?.biological_sex ?? undefined}
+                  caption={`D${pm.day}`}
                 />
               </div>
             ))}
