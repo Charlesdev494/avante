@@ -17,6 +17,7 @@ import corpoFrenteFemImg from "@/assets/mapa/corpo-frente-f.png";
 import corpoCostasFemImg from "@/assets/mapa/corpo-costas-f.png";
 import gluteaImg from "@/assets/mapa/glutea.png";
 import pelvisFemImg from "@/assets/mapa/pelvis-f.png";
+import pelvisMascImg from "@/assets/mapa/pelvis-m.png";
 
 /**
  * Mapa da Dor — paciente pinta áreas doloridas.
@@ -868,7 +869,67 @@ function PelvisSilhouette({ sex }: { sex: Sex }) {
   if (sex === "female") {
     return <FigureImage src={pelvisFemImg} alt="Posição ginecológica, feminino" />;
   }
-  return <PelvisVetorial sex={sex} />;
+  return <PelvisMasculina />;
+}
+
+/**
+ * Masculino: render 3D limpo mais rótulos em SVG.
+ *
+ * Diferente da feminina, cujos rótulos vieram desenhados dentro do PNG, aqui o
+ * texto é do app: fica nítido em qualquer tamanho e um termo pode ser corrigido
+ * sem gerar imagem nova.
+ *
+ * A figura ocupa 62% da largura para sobrar margem aos dois lados; ela preenchendo
+ * o painel inteiro não deixaria onde pôr rótulo.
+ */
+function PelvisMasculina() {
+  // ponta da linha guia sobre cada estrutura, em coordenadas do viewBox
+  const marcas: [string, number, number, "esq" | "dir", number][] = [
+    ["púbis", 157, 128, "esq", 118],
+    ["glande", 177, 137, "dir", 132],
+    ["pênis", 185, 172, "esq", 172],
+    ["escroto", 183, 239, "dir", 235],
+    ["períneo", 179, 273, "esq", 275],
+    ["ânus", 179, 292, "dir", 296],
+  ];
+  return (
+    <div className="absolute inset-0">
+      <img
+        src={pelvisMascImg}
+        alt="Posição ginecológica, masculino"
+        className="absolute inset-y-0 left-1/2 h-full -translate-x-1/2 select-none object-contain"
+        style={{ width: "62%" }}
+        draggable={false}
+        aria-hidden
+      />
+      <svg
+        viewBox={`0 0 ${PW} ${PH}`}
+        className="absolute inset-0 h-full w-full"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <g fill={SKIN_STROKE} stroke="none" fontSize="10" fontFamily="sans-serif">
+          {marcas.map(([texto, ax, ay, lado, ty]) => {
+            const esq = lado === "esq";
+            const tx = esq ? 62 : 298;
+            return (
+              <g key={texto}>
+                <path
+                  d={`M${tx} ${ty} L${ax} ${ay}`}
+                  fill="none"
+                  stroke={SKIN_STROKE}
+                  strokeWidth="0.6"
+                  opacity="0.55"
+                />
+                <text x={tx} y={ty + 3} textAnchor={esq ? "end" : "start"}>
+                  {texto}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+    </div>
+  );
 }
 
 function PelvisVetorial({ sex }: { sex: Sex }) {
